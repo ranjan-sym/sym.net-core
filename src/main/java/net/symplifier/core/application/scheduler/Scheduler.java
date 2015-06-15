@@ -22,14 +22,26 @@ import java.util.Iterator;
 public class Scheduler implements Runnable {
 	private final ArrayList<Schedule> schedules = new ArrayList<>();
 	private final ThreadPool<Scheduler, Schedule> pool = new ThreadPool<>(this);
-	private static Scheduler SELF = new Scheduler();
+
+	private static final Scheduler SELF = new Scheduler();
+
 	private volatile boolean exit;
 	private volatile boolean started;
+  private final int numberOfThreads;
 
 	private Scheduler() {
-		start();
+    this(5);
 	}
-	
+
+  public Scheduler(int numberOfThreads) {
+    this.numberOfThreads = numberOfThreads;
+    start();
+  }
+
+	public static void quit() {
+		SELF.stop();
+	}
+
 	/**
 	 * Start the scheduler. All the threads from the pool are allocated and
 	 * ScheduledTask are executed as per their definition in Schedule.
@@ -42,8 +54,8 @@ public class Scheduler implements Runnable {
     if (!started) {
       started = true;
 
-      new Thread(this).start();
-      pool.start(5);
+      new Thread(this, "Scheduler-Main").start();
+      pool.start(numberOfThreads);
     }
 	}
 	
@@ -53,8 +65,9 @@ public class Scheduler implements Runnable {
 	public void stop() {
 		exit = true;
 		pool.stop();			/* Stop the thread pool */
-		
-		schedules.notifyAll();	/* Notify the main thread for exit */
+		synchronized (schedules) {
+			schedules.notifyAll();	/* Notify the main thread for exit */
+		}
     started = false;
 	}
 
