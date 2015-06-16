@@ -29,6 +29,10 @@ public class Scheduler implements Runnable {
 	private Scheduler() {
 		start();
 	}
+
+	public static void quit() {
+		SELF.stop();
+	}
 	
 	/**
 	 * Start the scheduler. All the threads from the pool are allocated and
@@ -53,8 +57,9 @@ public class Scheduler implements Runnable {
 	public void stop() {
 		exit = true;
 		pool.stop();			/* Stop the thread pool */
-		
-		schedules.notifyAll();	/* Notify the main thread for exit */
+		synchronized(schedules) {
+      schedules.notifyAll();	/* Notify the main thread for exit */
+    }
     started = false;
 	}
 
