@@ -51,7 +51,7 @@ public class ThreadPool<S, A> {
       while(!exit) {
 
         synchronized (targets) {
-          while(!exit && targets.isEmpty()) {
+          while (!exit && targets.isEmpty()) {
             try {
               targets.wait();
             } catch (InterruptedException ex) {
@@ -59,25 +59,29 @@ public class ThreadPool<S, A> {
               break;
             }
           }
+        }
 
-          if (exit) {
-            break;
-          }
+        if (exit) {
+          break;
+        }
 
-          Iterator<Map.Entry<ThreadTarget<S,A>, A>> it = targets.entrySet().iterator();
+        Map.Entry<ThreadTarget<S,A>, A> item = null;
+        synchronized (targets) {
+          Iterator<Map.Entry<ThreadTarget<S, A>, A>> it = targets.entrySet().iterator();
           if (it.hasNext()) {
-            Map.Entry<ThreadTarget<S,A>, A> item = it.next();
+            item = it.next();
             it.remove();
-
-            try {
-              item.getKey().onRun(source, item.getValue());
-            } catch(RuntimeException ex) {
-              // We cannot allow an exception on the thread to break our application
-              ex.printStackTrace();
-            }
           }
         }
 
+        if (item != null) {
+          try {
+            item.getKey().onRun(source, item.getValue());
+          } catch (RuntimeException ex) {
+            // We cannot allow an exception on the thread to break our application
+            ex.printStackTrace();
+          }
+        }
       }
     }
   }

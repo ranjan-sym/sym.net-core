@@ -112,6 +112,9 @@ public abstract class Application {
   private final Plugin.Loader pluginLoader = new Plugin.Loader(this);
   private final Map<Class<? extends Module>, Module> MODULES = new HashMap<>();
 
+  /* Application specific objects to share with other libraries, like Database Connections */
+  private final HashMap<String, Object> appObjects = new HashMap<>();
+
   protected Application() {
     assert(APP == null): "There can only be one Application instance. " + APP.name + " is already instantiated.";
     APP = this;
@@ -256,6 +259,31 @@ public abstract class Application {
     }
   }
 
+
+  /**
+   * Retrieve an application wise shared object
+   * @param clazz The expected class of an object
+   * @param name The name of the object
+   * @param <T> Parameterization for better access
+   * @return Returns the stored object within application instance
+   */
+  public <T> T getObject(Class<T> clazz, String name) {
+    Object o = appObjects.get(name);
+    if (o.getClass().isAssignableFrom(clazz)) {
+      return (T)o;
+    }
+    return null;
+  }
+
+  /**
+   * Set an application wise shared object
+   * @param name The name of the object
+   * @param object The object to be stored in the application instance
+   */
+  public void setObject(String name, Object object) {
+    appObjects.put(name, object);
+  }
+
   /**
    * Register a {@link Module} with the application. The {@link Module} provides
    * a mechanism for {@link Plugin} to work in collaboration with the other
@@ -289,6 +317,11 @@ public abstract class Application {
   public void stop() {
     pluginLoader.stopPlugins();
 
+    // Also trigger the exit event
+    for(ExitHandler exitHandler:exitHandlers) {
+      exitHandler.onExit(this);
+    }
+
     onStop();
   }
 
@@ -314,5 +347,11 @@ public abstract class Application {
    */
   public abstract void onStop();
 
+
+  private final Set<ExitHandler> exitHandlers = new HashSet<>();
+
+  public void addExitHandler(ExitHandler exitHandler) {
+    exitHandlers.add(exitHandler);
+  }
 
 }
