@@ -77,6 +77,17 @@ public abstract class Application {
       assert(true):RES_APPLICATION_CONFIG + " file not found in the class path.";
     }
 
+    // Gather properties from commandline
+    for(String arg:args) {
+      if (arg.startsWith("app.")) {
+        String[] parts = arg.split("=", 2);
+
+        if(parts.length == 2) {
+          manifestProperties.setProperty(parts[0], parts[1]);
+        }
+      }
+    }
+
     Application app;
     try {
       Class<?> appClass = Class.forName(appClassStr);
@@ -153,6 +164,19 @@ public abstract class Application {
 
   /* Loads all the plugins and start the application */
   private void start() {
+    // Let's see if a folder path has been specified then we set that to current directory
+    String appFolder = manifestProperties.getProperty("app.folder");
+    if (appFolder != null && !appFolder.isEmpty()) {
+      // Let's check if its a valid folder
+      File file = new File(appFolder);
+      if (file.isDirectory()) {
+        System.setProperty("user.dir", file.getAbsolutePath());
+        System.out.println("Setting working directory to " + file.getAbsolutePath());
+      } else {
+        System.out.println("Invalid application folder - " + appFolder);
+      }
+    }
+
     // Load properties from settings.ini file if available overriding the
     // manifest properties
     File file = new File(RES_APPLICATION_CONFIG_LOCAL);
