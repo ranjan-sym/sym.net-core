@@ -1,6 +1,8 @@
 package net.symplifier.core.application.scheduler;
 
 import net.symplifier.core.application.threading.ThreadPool;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -20,6 +22,8 @@ import java.util.Iterator;
  *
  */
 public class Scheduler implements Runnable {
+	public static final Logger LOGGER = LogManager.getLogger("Scheduler");
+
 	private final ArrayList<Schedule> schedules = new ArrayList<>();
 	private final ThreadPool<Scheduler, Schedule> pool = new ThreadPool<>(this);
 	private static Scheduler SELF = new Scheduler();

@@ -11,8 +11,7 @@ import java.util.Map;
  * Created by ranjan on 6/10/15.
  */
 public class ThreadPool<S, A> {
-
-  private static final Logger LOGGER = LogManager.getLogger(ThreadPool.class);
+  private static final Logger LOGGER = LogManager.getLogger("ThreadPool");
 
   private volatile boolean exit = false;
   private final S source;
@@ -79,6 +78,7 @@ public class ThreadPool<S, A> {
             item.getKey().onRun(source, item.getValue());
           } catch (RuntimeException ex) {
             // We cannot allow an exception on the thread to break our application
+            LOGGER.error("Exception in task - ", ex);
             ex.printStackTrace();
           }
         }
