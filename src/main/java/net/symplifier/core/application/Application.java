@@ -1,5 +1,6 @@
 package net.symplifier.core.application;
 
+import net.symplifier.db.Schema;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -119,6 +120,7 @@ public abstract class Application {
   private Version version;
   private String description;
   private Properties manifestProperties;
+  private Schema schema;
 
   private final Plugin.Loader pluginLoader = new Plugin.Loader(this);
   private final Map<Class<? extends Module>, Module> MODULES = new HashMap<>();
@@ -133,6 +135,12 @@ public abstract class Application {
 
   public static Application app() {
     return APP;
+  }
+
+  public abstract Schema initSchema();
+
+  public Schema getSchema() {
+    return schema;
   }
 
   /**
@@ -189,6 +197,8 @@ public abstract class Application {
       }
     }
 
+    this.schema = initSchema();
+
     // Let the application do the initialization
     onInit(pluginLoader);
 
@@ -210,11 +220,7 @@ public abstract class Application {
    * @return The property value as String
    */
   public String get(String name, String defaultValue) {
-    if (manifestProperties.containsKey(name)) {
-      return manifestProperties.getProperty(name);
-    } else {
-      return defaultValue;
-    }
+    return manifestProperties.getProperty(name, defaultValue);
   }
 
   /**
