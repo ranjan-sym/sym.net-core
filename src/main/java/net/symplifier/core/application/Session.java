@@ -80,12 +80,17 @@ public class Session {
    * {@link Object#getClass()} will return the child class which may not actually
    * be the class we are expecting
    *
-   * @param clazz The type of object
+   * @param type The type of object
    * @param object The object to be attached
    * @param <T> The type of object
    */
-  public <T> void attach(Class<T> clazz, T object) {
-    attachments.put(clazz, object);
+  public <T> void attach(Class<T> type, T object) {
+    attachments.put(type, object);
+  }
+
+  @SuppressWarnings("unchecked")
+  public <T> T getAttachment(Class<T> type) {
+    return (T)attachments.get(type);
   }
 
   /**
@@ -96,8 +101,8 @@ public class Session {
    * @return The attached object
    */
   @SuppressWarnings("unchecked")
-  public <T> T get(Class<T> type) {
-    return (T) attachments.get(type);
+  public static <T> T get(Class<T> type) {
+    return (T) get().attachments.get(type);
   }
 
 
