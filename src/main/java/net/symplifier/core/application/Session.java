@@ -15,8 +15,18 @@ public class Session {
 
   public interface Listener {
 
+    /**
+     * An event callback when a session begins
+     *
+     * @param session Instance to the session object
+     */
     void onSessionBegin(Session session);
 
+    /**
+     * An event callback when a session ends
+     *
+     * @param session Instance to the session object
+     */
     void onSessionEnd(Session session);
 
   }
@@ -62,6 +72,36 @@ public class Session {
   /* The user for the session */
   private User user;
 
+  private HashMap<Class, Object> attachments = new HashMap<>();
+
+  /**
+   * Attaches an object of the specific class type. It might seem redundant to
+   * supply the object class as the first parameter but it is necessary since
+   * {@link Object#getClass()} will return the child class which may not actually
+   * be the class we are expecting
+   *
+   * @param clazz The type of object
+   * @param object The object to be attached
+   * @param <T> The type of object
+   */
+  public <T> void attach(Class<T> clazz, T object) {
+    attachments.put(clazz, object);
+  }
+
+  /**
+   * Retrieve the attached object based on its type
+   *
+   * @param type The type of object
+   * @param <T> The type of object
+   * @return The attached object
+   */
+  @SuppressWarnings("unchecked")
+  public <T> T get(Class<T> type) {
+    return (T) attachments.get(type);
+  }
+
+
+
 
   public static Session start(User user) {
     return start(user, new DefaultDelegation());
@@ -91,6 +131,7 @@ public class Session {
       listener.onSessionEnd(s);
     }
 
+    s.attachments.clear();
     s.user = null;
     s.delegation = null;
   }
