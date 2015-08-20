@@ -67,10 +67,10 @@ public class Session {
 
 
   /* A delegation used to retrieve object if not found in the session */
-  private Delegation delegation;
+  private final Delegation delegation;
 
   /* The user for the session */
-  private User user;
+  private final User user;
 
   private HashMap<Class, Object> attachments = new HashMap<>();
 
@@ -106,17 +106,18 @@ public class Session {
   }
 
 
-
+  private Session(User user, Delegation delegation) {
+    this.user = user;
+    this.delegation = delegation;
+  }
 
   public static Session start(User user) {
     return start(user, new DefaultDelegation());
   }
 
   public static Session start(User user, Delegation delegation) {
-    Session s = session.get();
-
-    s.user = user;
-    s.delegation = delegation;
+    Session s = new Session(user, delegation);
+    session.set(s);
 
     for(Listener listener: listeners) {
       listener.onSessionBegin(s);
@@ -135,10 +136,6 @@ public class Session {
     for(Listener listener: listeners) {
       listener.onSessionEnd(s);
     }
-
-    s.attachments.clear();
-    s.user = null;
-    s.delegation = null;
   }
 
 
