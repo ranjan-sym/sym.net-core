@@ -72,7 +72,7 @@ public class Session {
   /* The user for the session */
   private final User user;
 
-  private HashMap<Class, Object> attachments = new HashMap<>();
+  private HashMap<Object, Object> attachments = new HashMap<>();
 
   /**
    * Attaches an object of the specific class type. It might seem redundant to
@@ -86,6 +86,14 @@ public class Session {
    */
   public <T> void attach(Class<T> type, T object) {
     attachments.put(type, object);
+  }
+
+  public void attach(Object key, Object value) {
+    attachments.put(key, value);
+  }
+
+  public <T> T getAttachment(Object key, Class<T> type) {
+    return (T) attachments.get(key);
   }
 
   @SuppressWarnings("unchecked")
@@ -103,6 +111,11 @@ public class Session {
   @SuppressWarnings("unchecked")
   public static <T> T get(Class<T> type) {
     return (T) get().attachments.get(type);
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <T> T get(Object obj, Class<T> type) {
+    return (T) get().attachments.get(obj);
   }
 
 
