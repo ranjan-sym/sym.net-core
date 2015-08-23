@@ -143,11 +143,10 @@ public class Session {
     return session.get();
   }
 
-  public static void end() {
-    Session s = session.get();
-
+  public void end() {
+    //Session s = session.get();
     for(Listener listener: listeners) {
-      listener.onSessionEnd(s);
+      listener.onSessionEnd(this);
     }
   }
 
