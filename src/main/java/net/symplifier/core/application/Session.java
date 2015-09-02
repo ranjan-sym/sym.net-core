@@ -29,6 +29,22 @@ public class Session {
      */
     void onSessionEnd(Session session);
 
+    /**
+     * An event callback when a session is trying to commit
+     *
+     * @param session Instance to the session object
+     */
+    void onSessionCommit(Session session);
+
+    /**
+     * An event callback when a session is trying to rollback to its
+     * previous commit or the start of the session
+     *
+     * @param session Instance to the session object
+     */
+    void onSessionRollback(Session session);
+
+
   }
 
   public interface Delegation {
@@ -141,6 +157,18 @@ public class Session {
 
   public static Session get() {
     return session.get();
+  }
+
+  public void commit() {
+    for(Listener listener: listeners) {
+      listener.onSessionCommit(this);
+    }
+  }
+
+  public void rollback() {
+    for(Listener listener: listeners) {
+      listener.onSessionRollback(this);
+    }
   }
 
   public void end() {
