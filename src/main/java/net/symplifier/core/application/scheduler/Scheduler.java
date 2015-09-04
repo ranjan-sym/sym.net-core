@@ -1,6 +1,8 @@
 package net.symplifier.core.application.scheduler;
 
 import net.symplifier.core.application.threading.ThreadPool;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -20,23 +22,17 @@ import java.util.Iterator;
  *
  */
 public class Scheduler implements Runnable {
+	public static final Logger LOGGER = LogManager.getLogger("Scheduler");
+
 	private final ArrayList<Schedule> schedules = new ArrayList<>();
 	private final ThreadPool<Scheduler, Schedule> pool = new ThreadPool<>(this);
-
-	private static final Scheduler SELF = new Scheduler();
-
+	private static Scheduler SELF = new Scheduler();
 	private volatile boolean exit;
 	private volatile boolean started;
-  private final int numberOfThreads;
 
 	private Scheduler() {
-    this(5);
+		start();
 	}
-
-  public Scheduler(int numberOfThreads) {
-    this.numberOfThreads = numberOfThreads;
-    start();
-  }
 
 	public static void quit() {
 		SELF.stop();
@@ -54,8 +50,8 @@ public class Scheduler implements Runnable {
     if (!started) {
       started = true;
 
-      new Thread(this, "Scheduler-Main").start();
-      pool.start(numberOfThreads);
+      new Thread(this).start();
+      pool.start(5);
     }
 	}
 	
@@ -65,9 +61,9 @@ public class Scheduler implements Runnable {
 	public void stop() {
 		exit = true;
 		pool.stop();			/* Stop the thread pool */
-		synchronized (schedules) {
-			schedules.notifyAll();	/* Notify the main thread for exit */
-		}
+		synchronized(schedules) {
+      schedules.notifyAll();	/* Notify the main thread for exit */
+    }
     started = false;
 	}
 

@@ -1,5 +1,8 @@
 package net.symplifier.core.application.threading;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -8,6 +11,8 @@ import java.util.Map;
  * Created by ranjan on 6/10/15.
  */
 public class ThreadPool<S, A> {
+  private static final Logger LOGGER = LogManager.getLogger("ThreadPool");
+
   private volatile boolean exit = false;
   private final S source;
   private final Map<ThreadTarget<S,A>, A> targets = new LinkedHashMap<>();
@@ -17,6 +22,7 @@ public class ThreadPool<S, A> {
   }
 
   public void start(int threads) {
+    LOGGER.info("Starting poll with " + threads + " threads for " + source.getClass().toString());
     for(int i=0; i<threads; ++i) {
       new Thread(new WorkerThread()).start();
     }
@@ -44,7 +50,7 @@ public class ThreadPool<S, A> {
       while(!exit) {
 
         synchronized (targets) {
-          while(!exit && targets.isEmpty()) {
+          while (!exit && targets.isEmpty()) {
             try {
               targets.wait();
             } catch (InterruptedException ex) {
@@ -52,25 +58,30 @@ public class ThreadPool<S, A> {
               break;
             }
           }
+        }
 
-          if (exit) {
-            break;
-          }
+        if (exit) {
+          break;
+        }
 
-          Iterator<Map.Entry<ThreadTarget<S,A>, A>> it = targets.entrySet().iterator();
+        Map.Entry<ThreadTarget<S,A>, A> item = null;
+        synchronized (targets) {
+          Iterator<Map.Entry<ThreadTarget<S, A>, A>> it = targets.entrySet().iterator();
           if (it.hasNext()) {
-            Map.Entry<ThreadTarget<S,A>, A> item = it.next();
+            item = it.next();
             it.remove();
-
-            try {
-              item.getKey().onRun(source, item.getValue());
-            } catch(RuntimeException ex) {
-              // We cannot allow an exception on the thread to break our application
-              ex.printStackTrace();
-            }
           }
         }
 
+        if (item != null) {
+          try {
+            item.getKey().onRun(source, item.getValue());
+          } catch (RuntimeException ex) {
+            // We cannot allow an exception on the thread to break our application
+            LOGGER.error("Exception in task - ", ex);
+            ex.printStackTrace();
+          }
+        }
       }
     }
   }
