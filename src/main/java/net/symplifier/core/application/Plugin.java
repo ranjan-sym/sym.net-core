@@ -117,7 +117,11 @@ public abstract class Plugin {
 
       // Let the plugin initialize
       Application.LOGGER.trace("Initializing Plugin - " + plugin.name + " - " + pluginClass.getCanonicalName());
-      plugin.onInit(app);
+      try {
+        plugin.onInit(app);
+      } catch (Exception e) {
+        Application.LOGGER.error("Failed to initialize plugin - " + plugin.name + " - " + e.getLocalizedMessage());
+      }
     }
 
     private void load(File jarFile) {
@@ -133,7 +137,7 @@ public abstract class Plugin {
       Properties properties = new Properties();
       try {
         properties.load(stream);
-      } catch(IOException e) {
+      } catch(IOException | NullPointerException e ) {
         Application.LOGGER.error("Manifest file - " + MANIFEST_FILE + " not found in the plugin jar - " + jarFile.getAbsolutePath(), e);
         return;
       }
